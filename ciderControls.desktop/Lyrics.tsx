@@ -17,14 +17,15 @@ type DisplayLine = LyricLine & { chinese?: boolean; };
 
 function key(text: string) { return text.normalize("NFKC").replace(/[\s\p{P}]/gu, "").toLowerCase(); }
 
-function localizations(lines: LyricLine[], ttml: string): LyricLine[] {
+export function localizations(lines: LyricLine[], ttml: string): LyricLine[] {
+    lines = lines.map(line => ({ ...line, translation: undefined }));
     if (!ttml) return lines;
     try {
         const doc = new DOMParser().parseFromString(ttml, "application/xml");
         if (doc.getElementsByTagName("parsererror").length) return lines;
         const elements = Array.from(doc.getElementsByTagName("*"));
         const translations = elements.filter(e => e.localName === "translation");
-        const translation = translations.find(e => (e.getAttribute("xml:lang") || "").startsWith("zh")) ?? translations[0];
+        const translation = translations.find(e => /^en(?:-|$)/i.test(e.getAttributeNS("http://www.w3.org/XML/1998/namespace", "lang") || e.getAttribute("xml:lang") || ""));
         const romanization = elements.find(e => e.localName === "transliteration");
         const collect = (parent: Element | undefined) => new Map(Array.from(parent?.getElementsByTagName("text") ?? []).map(e => [e.getAttribute("for") || "", e.textContent?.replace(/\s+/g, " ").trim() || ""]));
         const translated = collect(translation);
@@ -36,7 +37,7 @@ function localizations(lines: LyricLine[], ttml: string): LyricLine[] {
         }
         return lines.map(line => {
             const extra = metadata.get(key(line.text));
-            return { ...line, translation: line.translation || extra?.translation, romanization: line.romanization || extra?.romanization };
+            return { ...line, translation: extra?.translation, romanization: line.romanization || extra?.romanization };
         });
     } catch { return lines; }
 }
@@ -45,8 +46,8 @@ export function prepareLyrics(lines: LyricLine[], ttml: string): DisplayLine[] {
     const japanese = lines.some(line => /[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(line.text)) || /xml:lang=["']ja(?:-[^"']*)?["']/.test(ttml);
     return lines.map(line => {
         const chinese = !japanese && /\p{Script=Han}/u.test(line.text);
-        const translation = chinese ? "" : traditional(line.translation || "");
-        return { ...line, chinese, translation: key(translation) === key(traditional(line.text)) ? "" : translation, romanization: chinese ? "" : line.romanization };
+        const translation = line.translation || "";
+        return { ...line, chinese, translation: key(translation) === key(line.text) ? "" : translation, romanization: chinese ? "" : line.romanization };
     });
 }
 
@@ -131,14 +132,13 @@ export function Lyrics({ playback, active, showTranslation, showRomanization }: 
                 setLines(localized);
                 setMessage(result.message);
                 if (!result.lines.length) timer = setTimeout(load, 15000);
-                else if (result.id && localized.some(l => l.text.trim() && !l.chinese)) {
-                    const translated = await Native.translations(result.id, { title: playback.title, artist: playback.artist, duration: playback.duration });
+                else if (result.id && localized.some(l => l.text.trim())) {
+                    const translated = await Native.translations(result.id);
                     if (!alive) return;
                     const map = new Map(translated.map(t => [key(t.line), t.translation]));
                     setLines(localized.map(line => {
-                        if (line.chinese) return line;
-                        const translation = traditional(map.get(key(line.text)) || line.translation || "");
-                        return { ...line, translation: key(translation) === key(traditional(line.text)) ? "" : translation };
+                        const translation = map.get(key(line.text)) || line.translation || "";
+                        return { ...line, translation: key(translation) === key(line.text) ? "" : translation };
                     }));
                 }
             } catch { if (alive) { setMessage("Synced lyrics are temporarily unavailable."); timer = setTimeout(load, 15000); } }

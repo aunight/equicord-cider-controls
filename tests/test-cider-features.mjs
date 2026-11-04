@@ -31,6 +31,8 @@ context.plugin.setup();
 context.plugin.setup();
 let mode = "off";
 const requests = [];
+let translationLanguage = "en";
+let pendingTranslations = 0;
 globalThis.fetch = async (url, options) => {
     requests.push({ url, ...options });
     assert.equal(options.headers.apptoken, "local-test-token");
@@ -40,7 +42,8 @@ globalThis.fetch = async (url, options) => {
         return Response.json({ data: { mode, available: true } });
     }
     if (url.includes("lyrics/current")) return Response.json({ data: { id: "song-1", ttml: "<tt/>", lines: [{ start: 12, end: 15, text: "B", words: [{ start: 12, end: 13, text: "B" }] }, { start: 2, end: 9, text: "A" }, { start: null, text: "untimed" }] } });
-    if (url.includes("/translations?language=zh")) return Response.json({ data: { translations: [{ line: "B", translation: "Translation" }] } });
+    if (url.includes("/translations?language=en") && pendingTranslations-- > 0) return new Response(null, { status: 404 });
+    if (url.includes("/translations?language=en")) return Response.json({ data: { language: translationLanguage, translations: [{ line: "B", translation: "Translation" }] } });
     if (url.includes("config?path=audio.equalizer")) return Response.json({ data: equalizer });
     if (url.includes("messages/message")) { messages.dispatchEvent(new CustomEvent(body.type, { detail: body.data })); return Response.json({ status: "success" }); }
     return Response.json({});
@@ -58,6 +61,14 @@ try {
     assert.equal(lyrics.lines[1].words[0].start, 12);
     assert.equal(lyrics.ttml, "<tt/>");
     assert.equal((await native.translations(null, lyrics.id))[0].translation, "Translation");
+    pendingTranslations = 1;
+    const beforeRetry = requests.length;
+    assert.equal((await native.translations(null, lyrics.id))[0].translation, "Translation");
+    assert.equal(requests.length - beforeRetry, 2);
+    translationLanguage = "zh";
+    assert.deepEqual(await native.translations(null, lyrics.id), []);
+    translationLanguage = "en";
+    assert.ok(requests.filter(r => r.url.includes("/translations?")).every(r => r.url.endsWith("language=en")));
     count = requests.length;
     assert.deepEqual(await native.translations(null, "../config"), []);
     assert.equal(requests.length, count);

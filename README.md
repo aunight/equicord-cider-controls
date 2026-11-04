@@ -2,12 +2,12 @@
 
 [繁體中文](README.zh-TW.md)
 
-A Windows desktop user plugin for **Equicord / Equibop** that puts Cider controls above your user panel, including when a voice panel is visible. Version **1.5.0** uses English UI labels by default.
+A Windows desktop user plugin for **Equicord / Equibop** that puts Cider controls above your user panel, including when a voice panel is visible. Version **1.5.1** uses English UI labels by default.
 
 
 ## Screenshots
 
-Component previews using demo playback data. The English version currently displays Chinese translations when available.
+Component previews using demo playback data. English UI with English lyric translations when available.
 
 ![English player and lyrics](docs/screenshots/player-en.jpg)
 
@@ -17,9 +17,9 @@ Component previews using demo playback data. The English version currently displ
 
 - Previous / play-pause / next, seek and volume, rounded artwork, long-title marquee.
 - Click the artwork to expand three synchronized lyric lines. The current line is larger and yellow; translation and romanization use smaller translucent text.
-- `T` toggles Chinese translations; `R` toggles romanization. Both choices are saved independently.
+- `T` toggles English translations; `R` toggles romanization. Both choices are saved independently.
 - Source-provided word timestamps drive word highlights. Line-only lyrics remain line-synchronized; timestamps are never fabricated.
-- NetEase Chinese translations are matched by song title, artist and duration, then aligned to original lyric text. Cider translations are the fallback. Simplified Chinese is displayed as Traditional Chinese; Chinese originals do not get a duplicate translation row.
+- English translations come from English-tagged TTML or Cider’s translation API (`language=en`), aligned to original lyric text. Chinese songs can also show English translations. Missing English translations stay hidden; Chinese translations are not used as a fallback. Cider generation-pending responses are retried briefly.
 - Local Japanese romanization with a bundled offline Kuromoji dictionary; existing source readings take priority.
 - Off / Gaming / Anti-fatigue / Cozy listening modes and a 10-band EQ with Vibrant Bass and Mix.
 - Frosted player / EQ styling. The player is hidden when Cider is unavailable by default.

@@ -30,7 +30,7 @@ const settings = definePluginSettings({
     },
     showTranslation: {
         type: OptionType.BOOLEAN,
-        description: "Show available Chinese lyric translations.",
+        description: "Show available English lyric translations.",
         default: true
     },
     showRomanization: {
@@ -139,7 +139,7 @@ function Player() {
     const playing = Boolean(playback?.playing);
     const title = playback?.title || "Cider";
     return (
-        <section className="eq-cider-player" data-cider-version="1.5.0" aria-label="Cider music controls" aria-busy={busy}>
+        <section className="eq-cider-player" data-cider-version="1.5.1" aria-label="Cider music controls" aria-busy={busy}>
             <div className="eq-cider-row">
                 <Button variant="none" className="eq-cider-artwork" aria-label={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} title={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} aria-expanded={lyricsExpanded} disabled={!ready} onClick={() => { settings.store.lyricsExpanded = !lyricsExpanded; }}>
                     {playback?.artwork && failedArtwork !== playback.artwork
@@ -166,7 +166,7 @@ function Player() {
             </div>}
             {ready && <div className="eq-cider-options">
                 <Button variant="none" size="iconOnly" className="eq-cider-option eq-cider-eq-button" aria-label="Open Cider Equalizer" title="Equalizer" onClick={openEqualizer}><Icon name="eq" /></Button>
-                <Button variant="none" className="eq-cider-option eq-cider-lyric-toggle" aria-label="Chinese translation" title="Chinese translation" aria-pressed={showTranslation} onClick={() => { settings.store.showTranslation = !showTranslation; }}>T</Button>
+                <Button variant="none" className="eq-cider-option eq-cider-lyric-toggle" aria-label="English translation" title="English translation" aria-pressed={showTranslation} onClick={() => { settings.store.showTranslation = !showTranslation; }}>T</Button>
                 <Button variant="none" className="eq-cider-option eq-cider-lyric-toggle" aria-label="Romanization" title="Romanization" aria-pressed={showRomanization} onClick={() => { settings.store.showRomanization = !showRomanization; }}>R</Button>
                 <div className="eq-cider-mode"><span>Mode</span><Button variant="none" className="eq-cider-mode-trigger" aria-label="Cider listening mode" aria-haspopup="menu" disabled={busy || !playback?.mode} onClick={event => {
                     const rect = event.currentTarget.getBoundingClientRect();

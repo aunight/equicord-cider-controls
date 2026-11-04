@@ -9,7 +9,6 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { load } from "yaml-js";
 
-import { neteaseTranslations, type TranslationTrack } from "./netease";
 import { romanizeJapanese } from "./romanization";
 
 export type Playback = {
@@ -137,7 +136,7 @@ export async function lyrics(_event: unknown): Promise<{ id: string; lines: Lyri
         if (!Array.isArray(data.lines)) return { id: "", lines: [], message: "No synced lyrics for this track.", ttml: "" };
         const lines = data.lines.map(record).filter(l => typeof l.start === "number" && Number.isFinite(l.start)).map(l => ({
             start: number(l.start), end: number(l.end, number(l.start)), text: text(l.text),
-            translation: text(l.translation), romanization: text(l.romanization),
+            romanization: text(l.romanization),
             words: Array.isArray(l.words) ? l.words.map(record).filter(w => typeof w.start === "number" && Number.isFinite(w.start) && typeof w.end === "number" && Number.isFinite(w.end)).map(w => ({ start: number(w.start), end: number(w.end), text: text(w.text) })) : []
         })).sort((a, b) => a.start - b.start);
         const localized = await romanizeJapanese(lines, text(record(data.source).language), join(__dirname, "cider-lyrics-dict")).catch(() => lines);
@@ -147,14 +146,20 @@ export async function lyrics(_event: unknown): Promise<{ id: string; lines: Lyri
     }
 }
 
-export async function translations(_event: unknown, id: string, track?: TranslationTrack): Promise<Array<{ line: string; translation: string; }>> {
+export async function translations(_event: unknown, id: string): Promise<Array<{ line: string; translation: string; }>> {
     if (!/^[a-zA-Z0-9._-]{1,128}$/.test(id)) return [];
-    const cider = (async () => { try {
-        const result = record(record(await request(`v2/lyrics/${encodeURIComponent(id)}/translations?language=zh`, undefined, "GET", 8000)).data);
-        return Array.isArray(result.translations) ? result.translations.map(record).map(t => ({ line: text(t.line), translation: text(t.translation) })) : [];
-    } catch { return []; } })();
-    const [fallback, netease] = await Promise.all([cider, track ? neteaseTranslations(track) : []]);
-    return [...fallback, ...netease];
+    // Cider can return 404 while a translation is still being generated.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            const result = record(record(await request(`v2/lyrics/${encodeURIComponent(id)}/translations?language=en`, undefined, "GET", 8000)).data);
+            if (result.language && !/^en(?:-|$)/i.test(text(result.language))) return [];
+            return Array.isArray(result.translations) ? result.translations.map(record).map(t => ({ line: text(t.line), translation: text(t.translation) })) : [];
+        } catch (error) {
+            if (attempt === 2 || !(error instanceof Error) || !error.message.includes("(404)")) return [];
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+    }
+    return [];
 }
 
 export type Equalizer = { enabled: boolean; frequencies: number[]; gain: number[]; Q: number[]; mix: number; vibrantBass: number; };
