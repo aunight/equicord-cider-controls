@@ -1,0 +1,12 @@
+node_modules/
+.cider-test-output/
+.cider-controls-tests/
+dist/
+*.asar
+*.log
+*.before
+*.backup
+.env*
+spa-config.yml
+settings.json
+quickCss.css

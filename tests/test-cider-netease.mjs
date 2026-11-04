@@ -1,0 +1,24 @@
+import { resolve as resolveFromCwd } from "node:path";
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { createRequire } from 'node:module';
+await build({entryPoints:['src/userplugins/ciderControls.desktop/netease.ts'],outfile:'test-netease.cjs',bundle:true,platform:'node',format:'cjs'});
+const {parseLrc,matchSong,alignTranslations,neteaseTranslations}=createRequire(resolveFromCwd("package.json"))('./test-netease.cjs');
+assert.deepEqual(parseLrc('[00:01.25][00:03.500]hello\n[ar:author]'),[{start:1.25,text:'hello'},{start:3.5,text:'hello'}]);
+const track={title:'Erica (feat. 缶缶)',artist:'南雲ゆうき',duration:213.48};
+const song={id:1824770619,name:track.title,duration:213480,artists:[{name:track.artist}]};
+assert.equal(matchSong([song],track),'1824770619');
+assert.equal(matchSong([{...song,duration:240000}],track),'');
+assert.equal(matchSong([{...song,artists:[{name:'Cover Artist'}]}],track),'');
+assert.equal(matchSong([{...song,name:'Erica (Live)'}],track),'');
+assert.deepEqual(alignTranslations('[00:01]Hello\n[00:05]world','[00:01.1]你好\n[00:08]世界'),[{line:'Hello',translation:'你好'}]);
+assert.deepEqual(alignTranslations('[00:01]君が好き','[00:01]君が好き'),[]);
+const oldFetch=globalThis.fetch;let calls=0;
+globalThis.fetch=async(url,opts)=>{calls++;assert.equal(new URL(url).hostname,'music.163.com');assert.equal(opts.headers,undefined);return Response.json(url.pathname.endsWith('search/get')?{result:{songs:[song]}}:{lrc:{lyric:'[00:01]Hello'},tlyric:{lyric:'[00:01]你好'}});};
+assert.deepEqual(await neteaseTranslations(track),[{line:'Hello',translation:'你好'}]);
+await neteaseTranslations(track);assert.equal(calls,2);
+globalThis.fetch=async()=>{throw new Error('offline');};
+assert.deepEqual(await neteaseTranslations({...track,title:'Other song'}),[]);
+globalThis.fetch=oldFetch;
+console.log('PASS: NetEase matching, live/cover/duration rejection, timestamp alignment, duplicate suppression, private token isolation, cache, offline fallback.');
+if(process.argv.includes('--live')){const rows=await neteaseTranslations({...track,title:'Erica'});console.log(JSON.stringify({liveTranslationCount:rows.length}));assert.ok(rows.length>20);}

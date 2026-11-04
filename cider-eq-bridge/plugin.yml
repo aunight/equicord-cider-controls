@@ -1,0 +1,10 @@
+identifier: local.aunight.equicord-eq-bridge
+name: Equicord EQ Bridge
+description: Applies equalizer commands from the local Equicord CiderControls plugin.
+version: 1.0.0
+author: AuNight
+ce_prefix: equicord-eq-bridge
+pluginKitVersion: '4'
+entry:
+  plugin.js:
+    type: main

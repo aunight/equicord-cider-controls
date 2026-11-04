@@ -1,0 +1,255 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+.eq-cider-host {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    padding: 0 0 6px;
+}
+
+.eq-cider-host:empty { display: none; }
+.eq-cider-host:has(.eq-cider-player) { display: block; }
+.eq-cider-host:not(:has(.eq-cider-player)) { display: none; }
+
+.eq-cider-player {
+    anchor-name: --equibop-cider-glass;
+    position: relative;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 10px 12px 9px;
+    border-radius: 22px;
+    color: #f5f6fa;
+    background: rgb(60 66 79 / 20%);
+    backdrop-filter: blur(10px) saturate(1.12);
+    -webkit-backdrop-filter: blur(10px) saturate(1.12);
+    box-shadow: var(--equibop-capsule-highlight, inset 0 1px 2px rgb(255 255 255 / 28%), inset 0 0 0 1px rgb(255 255 255 / 13%), 0 2px 7px rgb(0 0 0 / 6%));
+    container-type: inline-size;
+}
+
+.eq-cider-sampling {
+    position: fixed;
+    top: anchor(--equibop-cider-glass top);
+    left: anchor(--equibop-cider-glass left);
+    width: anchor-size(--equibop-cider-glass width);
+    height: anchor-size(--equibop-cider-glass height);
+    background: #252832;
+    border-radius: 22px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.eq-cider-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.eq-cider-player .eq-cider-artwork { position: relative; flex: 0 0 42px; width: 42px; height: 42px; min-width: 42px; min-height: 42px; padding: 0; border: 0; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: rgb(255 255 255 / 8%); color: #ffc400; }
+.eq-cider-artwork img { width: 100%; height: 100%; object-fit: cover; }
+.eq-cider-artwork-toggle { position: absolute; left: 2px; top: 2px; width: 17px; height: 17px; display: grid; place-items: center; border-radius: 6px; color: #fff; background: rgb(16 18 23 / 58%); backdrop-filter: blur(4px); pointer-events: none; opacity: 0; translate: 0 -2px; transition: opacity 140ms ease, translate 140ms ease; }
+.eq-cider-artwork:hover .eq-cider-artwork-toggle, .eq-cider-artwork:focus-visible .eq-cider-artwork-toggle { opacity: 1; translate: 0 0; }
+.eq-cider-info { flex: 1 1 0; min-width: 0; container-type: inline-size; }
+.eq-cider-title, .eq-cider-artist { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.eq-cider-title { font-size: 13px; line-height: 19px; font-weight: 650; }
+.eq-cider-title span { display: inline-block; width: max-content; min-width: 100%; white-space: nowrap; animation: eq-cider-title-scroll 12s linear infinite alternate; }
+@keyframes eq-cider-title-scroll { 0%, 20% { translate: 0 0; } 80%, 100% { translate: min(0px, calc(100cqw - 100%)) 0; } }
+.eq-cider-artist { font-size: 11px; line-height: 17px; opacity: .7; }
+.eq-cider-transport { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.eq-cider-player .eq-cider-button { display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; min-width: 30px; min-height: 30px; padding: 0; border: 0; border-radius: 50%; color: #f5f6fa; background: transparent; box-shadow: none; transition: background 120ms, transform 120ms; }
+.eq-cider-player .eq-cider-button svg { color: #ffc400; }
+.eq-cider-player .eq-cider-play { background: rgb(255 196 0 / 13%); box-shadow: inset 0 1px 2px rgb(255 238 177 / 26%); }
+.eq-cider-player .eq-cider-button:hover:not(:disabled) { background: rgb(255 255 255 / 20%); }
+.eq-cider-player .eq-cider-button:active:not(:disabled) { transform: scale(.94); }
+.eq-cider-player .eq-cider-button:disabled { opacity: .35; }
+.eq-cider-player :focus-visible { outline: 2px solid #ffd052; outline-offset: 2px; }
+.eq-cider-sliders { display: flex; align-items: center; gap: 7px; margin-top: 8px; height: 18px; }
+.eq-cider-time { font-size: 10px; font-variant-numeric: tabular-nums; opacity: .65; flex-shrink: 0; }
+.eq-cider-sliders input { appearance: none; -webkit-appearance: none; flex: 1 1 0; min-width: 16px; width: 0; margin: 0; height: 18px; cursor: pointer; background: transparent; border: none; padding: 0; }
+.eq-cider-sliders input::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: linear-gradient(to right, rgb(244 246 250 / 84%) var(--eq-cider-progress, 0%), rgb(244 246 250 / 20%) var(--eq-cider-progress, 0%)); }
+.eq-cider-sliders input::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 10px; height: 10px; margin-top: -3px; border-radius: 50%; border: none; background: #f5f6fa; box-shadow: 0 1px 4px rgb(0 0 0 / 18%); opacity: 0; transition: opacity 120ms, scale 120ms; }
+.eq-cider-sliders:hover input::-webkit-slider-thumb, .eq-cider-sliders input:focus-visible::-webkit-slider-thumb { opacity: 1; }
+.eq-cider-sliders input:active::-webkit-slider-thumb { scale: 1.15; opacity: 1; }
+.eq-cider-sliders > svg { width: 14px; height: 14px; opacity: .7; flex-shrink: 0; margin-left: 4px; }
+.eq-cider-sliders input.eq-cider-volume { flex: 0 1 56px; width: 56px; }
+.eq-cider-status { margin-top: 6px; font-size: 11px; line-height: 16px; opacity: .7; }
+.eq-cider-options { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.eq-cider-player .eq-cider-option { flex-shrink: 0; min-height: 26px; height: 26px; padding: 0 10px; border: 0; border-radius: 13px; color: #ffd052; font-size: 11px; background: rgb(255 255 255 / 6%); box-shadow: inset 0 1px 1px rgb(255 255 255 / 10%); }
+.eq-cider-player .eq-cider-option:hover { background: rgb(255 196 0 / 12%); }
+.eq-cider-player .eq-cider-eq-button { width: 28px; min-width: 28px; padding: 0; color: #ffd052; border-radius: 10px; }
+.eq-cider-eq-button svg { width: 15px; height: 15px; }
+.eq-cider-mode { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; margin-left: auto; font-size: 11px; color: rgb(255 255 255 / 65%); }
+.eq-cider-player .eq-cider-mode-trigger { display: flex; align-items: center; justify-content: space-between; gap: 18px; height: 28px; width: 112px; min-width: 96px; max-width: 100%; border: 0; border-radius: 14px; padding: 0 12px 0 16px; background: rgb(255 255 255 / 8%); color: #ffd052; font-size: 11px; box-shadow: inset 0 1px 1px rgb(255 255 255 / 12%); }
+.eq-cider-mode-trigger:hover { background: rgb(255 196 0 / 12%); }
+.eq-cider-mode-menu { min-width: 144px !important; border-radius: 18px !important; transform-origin: top center; animation: eq-cider-menu-open 160ms cubic-bezier(.2,.8,.2,1); }
+@keyframes eq-cider-menu-open { from { translate: 0 -5px; scale: .96; opacity: .3; } to { translate: 0 0; scale: 1; opacity: 1; } }
+.eq-cider-lyrics-expander { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 300ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease; }
+.eq-cider-lyrics-expander[data-expanded="true"] { grid-template-rows: 1fr; opacity: 1; }
+.eq-cider-lyrics-clip { min-height: 0; overflow: hidden; }
+.eq-cider-artwork-large { display: block; width: 100%; max-height: 75vh; object-fit: contain; border-radius: 18px; }
+.eq-cider-lyrics { position: relative; height: 236px; margin-top: 4px; overflow: hidden; mask-image: linear-gradient(transparent, black 8%, black 92%, transparent); }
+.eq-cider-lyrics-message { height: 100%; display: grid; place-items: center; opacity: .65; font-size: 12px; }
+.eq-cider-lyric-line { position: absolute; left: 0; right: 0; top: 50%; text-align: center; font-size: 17px; line-height: 23px; font-weight: 600; opacity: .45; transform: translateY(-50%) scale(.8); transition: transform 280ms ease, opacity 280ms ease, color 280ms ease; }
+.eq-cider-lyric-original { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.eq-cider-lyric-line[data-slot="0"] { transform: translateY(calc(-50% - 78px)) scale(.8); }
+.eq-cider-lyric-line[data-slot="2"] { transform: translateY(calc(-50% + 78px)) scale(.8); }
+.eq-cider-lyric-line[data-current="true"] { opacity: 1; transform: translateY(-50%) scale(1); color: #fff4c7; }
+.eq-cider-lyric-translation, .eq-cider-lyric-romanization { font-size: 11px; font-weight: 400; line-height: 15px; opacity: .7; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eq-cider-lyric-romanization { font-size: 10px; opacity: .55; margin-top: 1px; }
+.eq-cider-word { display: inline; background-clip: text; -webkit-background-clip: text; color: transparent; }
+.eq-cider-word[data-active="true"] { filter: drop-shadow(0 0 4px rgb(255 224 128 / 28%)); }
+.container__8a031:has(.eq-cider-equalizer) { anchor-name: --equibop-cider-eq-dialog; background: rgb(36 40 50 / 45%) !important; backdrop-filter: blur(14px) saturate(1.1) !important; -webkit-backdrop-filter: blur(14px) saturate(1.1) !important; }
+.eq-cider-modal-sampling { position: fixed; top: anchor(--equibop-cider-eq-dialog top); left: anchor(--equibop-cider-eq-dialog left); width: anchor-size(--equibop-cider-eq-dialog width); height: anchor-size(--equibop-cider-eq-dialog height); background: #252832; border-radius: 24px; z-index: -1; pointer-events: none; }
+.eq-cider-equalizer { padding: 8px 4px 14px; color: var(--text-default, #f5f6fa); }
+.eq-cider-eq-toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.eq-cider-eq-bands { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
+.eq-cider-eq-band { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11px; min-width: 0; }
+.eq-cider-eq-band output { font-variant-numeric: tabular-nums; color: #ffd052; }
+.eq-cider-eq-band input { writing-mode: vertical-lr; direction: rtl; height: 160px; width: 20px; margin: 0; accent-color: #ffc400; cursor: pointer; }
+.eq-cider-eq-extra { display: flex; gap: 20px; margin-top: 24px; }
+.eq-cider-eq-extra label { flex: 1; min-width: 0; font-size: 12px; }
+.eq-cider-eq-extra output { float: right; color: #ffd052; font-variant-numeric: tabular-nums; }
+.eq-cider-eq-extra input { display: block; width: 100%; margin-top: 12px; accent-color: #ffc400; }
+
+@container (max-width: 270px) {
+    .eq-cider-row { gap: 7px; flex-wrap: wrap; }
+    .eq-cider-info { flex-basis: calc(100% - 50px); }
+    .eq-cider-transport { width: 100%; justify-content: center; }
+    .eq-cider-sliders input.eq-cider-volume { flex-basis: 42px; width: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eq-cider-player .eq-cider-button, .eq-cider-lyric-line { transition: none; }
+    .eq-cider-title span { animation: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .eq-cider-word { background-image: none !important; color: inherit; }
+    .eq-cider-lyrics-expander, .eq-cider-artwork-toggle { transition: none; }
+    .eq-cider-mode-menu { animation: none; }
+}
+
+[role="dialog"]:has(.eq-cider-equalizer), .outerContainer__8a031:has(.eq-cider-equalizer) { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+/* Compact lyrics; animate composited content instead of the glass layout height. */
+.eq-cider-lyrics-expander { display:block !important;height:0 !important;overflow:hidden !important;opacity:1 !important;transition:none !important; }
+.eq-cider-lyrics-expander[data-expanded="true"] { height:172px !important; }
+.eq-cider-lyrics-expander[data-expanded="true"] .eq-cider-lyrics-clip { animation:eq-cider-lyrics-reveal 150ms ease-out; }
+@keyframes eq-cider-lyrics-reveal { from { opacity:0;transform:translateY(6px); } to { opacity:1;transform:translateY(0); } }
+.eq-cider-lyrics { height:168px !important;margin-top:4px !important; }
+.eq-cider-lyric-line { font-size:20px !important;line-height:26px !important;color:#ffc400 !important; }
+.eq-cider-lyric-line[data-slot="0"] { transform:translateY(calc(-50% - 54px)) scale(.8) !important; }
+.eq-cider-lyric-line[data-slot="2"] { transform:translateY(calc(-50% + 54px)) scale(.8) !important; }
+.eq-cider-lyric-line[data-current="true"] { font-size:22px !important;line-height:28px !important;color:#ffc400 !important;transform:translateY(-50%) scale(1) !important; }
+.eq-cider-word { background-color:#ffc400;background-blend-mode:multiply; }
+.eq-cider-lyric-translation,.eq-cider-lyric-romanization { color:#ffda65 !important; }
+@media (prefers-reduced-motion:reduce) { .eq-cider-lyrics-clip { animation:none !important; } }
+
+/* Secondary lyric text stays quiet while the active line remains yellow. */
+.eq-cider-lyric-line:not([data-current="true"]) { color:rgba(255,255,255,.60) !important;opacity:1 !important; }
+.eq-cider-lyric-translation,.eq-cider-lyric-romanization { color:rgba(255,255,255,.58) !important;opacity:1 !important; }
+
+/* Align the listening menu to its own trigger and use the player's yellow. */
+.eq-cider-mode-trigger { anchor-name:--eq-cider-mode-trigger; }
+.eq-cider-mode-menu {
+ 
+ 
+ 
+ min-width:144px !important;width:144px !important;max-width:calc(100vw - 24px) !important;
+ --brand-500:#ffc400;--brand-560:#dfaa00;--control-primary-background-default:#ffc400;
+}
+.eq-cider-mode-menu [role="menuitemradio"][aria-checked="true"],
+.eq-cider-mode-menu [class*="radioSelection_"] { color:#ffc400 !important; }
+.eq-cider-mode-menu [role="menuitemradio"]:hover { background:rgba(255,196,0,.13) !important; }
+/* Thin secondary text, closer lines, and a shorter composited reveal. */
+.eq-cider-lyric-line:not([data-current="true"]) { font-size:18px !important;line-height:22px !important;font-weight:300 !important; }
+.eq-cider-lyric-translation,.eq-cider-lyric-romanization { font-weight:300 !important;margin-top:1px !important;line-height:13px !important; }
+.eq-cider-lyrics-expander[data-expanded="true"] { height:148px !important; }
+.eq-cider-lyrics { height:144px !important; }
+.eq-cider-lyric-line[data-slot="0"] { transform:translateY(calc(-50% - 44px)) scale(.85) !important; }
+.eq-cider-lyric-line[data-slot="2"] { transform:translateY(calc(-50% + 44px)) scale(.85) !important; }
+.eq-cider-lyrics-expander[data-expanded="true"] .eq-cider-lyrics-clip { animation:eq-cider-lyrics-soft-reveal 100ms linear; }
+@keyframes eq-cider-lyrics-soft-reveal { from { opacity:.4; } to { opacity:1; } }
+.eq-cider-lyric-line { transition:opacity 120ms linear,transform 120ms ease-out !important; }
+.eq-cider-word[data-active="true"] { filter:none !important; }
+
+.eq-cider-lyric-line:not([data-current="true"]) .eq-cider-lyric-original,
+.eq-cider-lyric-translation,.eq-cider-lyric-romanization {
+ font-family:var(--font-primary, system-ui),sans-serif !important;
+ font-weight:300 !important;font-variation-settings:"wght" 300 !important;
+}
+
+:is(.eq-cider-mode-menu,[role="menu"][aria-label="Cider listening mode"],#eq-cider-listening-mode) {
+ 
+ 
+ 
+ min-width:144px !important;width:144px !important;
+ --brand-500:#ffc400;--brand-560:#dfaa00;--blurple-50:#ffc400;
+}
+:is(.eq-cider-mode-menu,[role="menu"][aria-label="Cider listening mode"],#eq-cider-listening-mode) [role="menuitemradio"][aria-checked="true"] svg { color:#ffc400 !important; }
+:is(.eq-cider-mode-menu,[role="menu"][aria-label="Cider listening mode"],#eq-cider-listening-mode) [role="menuitemradio"][aria-checked="true"] svg path { fill:#ffc400 !important; }
+:is(.eq-cider-mode-menu,[role="menu"][aria-label="Cider listening mode"],#eq-cider-listening-mode) [class*="radioSelection_"] { color:#ffc400 !important; }
+
+/* Discord's translated popup layer must own the viewport anchor. */
+.layer__529b0:has(> .eq-cider-mode-menu) {
+ 
+ 
+ 
+ 
+ 
+}
+#eq-cider-listening-mode.eq-cider-mode-menu {
+ 
+ width:144px !important;min-width:144px !important;max-width:144px !important;
+}
+#eq-cider-listening-mode [data-selected="true"] .outerRadioFill__64e61 { fill:#ffc400 !important; }
+#eq-cider-listening-mode [data-selected="true"] .innerDotRadio__64e61 { fill:#262b35 !important; }
+
+.eq-cider-lyrics { contain:layout paint style;isolation:isolate;transform:translateZ(0); }
+.eq-cider-lyrics-clip { will-change:opacity; }
+
+/* Static word DOM; the browser runs timestamped clip animations between syncs. */
+.eq-cider-word-static { display:inline-block;position:relative;vertical-align:baseline;color:rgba(255,196,0,.38);white-space:pre-wrap; }
+.eq-cider-word-fill { position:absolute;inset:0;color:#ffc400;pointer-events:none;clip-path:inset(0 100% 0 0);will-change:clip-path; }
+.eq-cider-lyric-line { will-change:transform,opacity; }
+
+/* Keep layout metrics constant while lyric cards move between slots. */
+.eq-cider-lyric-line,
+.eq-cider-lyric-line:not([data-current="true"]),
+.eq-cider-lyric-line[data-current="true"] {
+ font-size:22px !important;line-height:28px !important;font-weight:300 !important;
+ font-family:var(--font-primary, system-ui),sans-serif !important;
+ font-variation-settings:"wght" 300 !important;
+ transition:transform 220ms cubic-bezier(.2,.75,.25,1),opacity 180ms linear !important;
+}
+.eq-cider-lyric-line .eq-cider-lyric-original { font:inherit !important;font-variation-settings:inherit !important; }
+.eq-cider-lyric-line[data-current="true"] .eq-cider-lyric-original { text-shadow:.3px 0 currentColor,-.3px 0 currentColor; }
+.eq-cider-lyric-line[data-slot="0"] { transform:translate3d(0,calc(-50% - 44px),0) scale(.72) !important; }
+.eq-cider-lyric-line[data-slot="2"] { transform:translate3d(0,calc(-50% + 44px),0) scale(.72) !important; }
+.eq-cider-lyric-line[data-current="true"] { transform:translate3d(0,-50%,0) scale(1) !important; }
+.eq-cider-lyric-line:not([data-current="true"]) .eq-cider-word-static { color:inherit; }
+.eq-cider-lyric-line:not([data-current="true"]) .eq-cider-word-fill { visibility:hidden; }
+@media (prefers-reduced-motion:reduce) { .eq-cider-lyric-line { transition:none !important; } }
+
+/* Make room only when localization actually supplies an extra text row. */
+.eq-cider-lyrics-expander[data-expanded="true"]:has(.eq-cider-lyric-romanization) { height:188px !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization) { height:184px !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization) .eq-cider-lyric-line[data-slot="0"] { transform:translate3d(0,calc(-50% - 56px),0) scale(.72) !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization) .eq-cider-lyric-line[data-slot="2"] { transform:translate3d(0,calc(-50% + 56px),0) scale(.72) !important; }
+.eq-cider-lyrics-expander[data-expanded="true"]:has(.eq-cider-lyric-romanization):has(.eq-cider-lyric-translation) { height:212px !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization):has(.eq-cider-lyric-translation) { height:208px !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization):has(.eq-cider-lyric-translation) .eq-cider-lyric-line[data-slot="0"] { transform:translate3d(0,calc(-50% - 64px),0) scale(.72) !important; }
+.eq-cider-lyrics:has(.eq-cider-lyric-romanization):has(.eq-cider-lyric-translation) .eq-cider-lyric-line[data-slot="2"] { transform:translate3d(0,calc(-50% + 64px),0) scale(.72) !important; }
+
+.eq-cider-player .eq-cider-lyric-toggle { width:28px;min-width:28px;padding:0;display:grid;place-items:center;font-size:12px; }
+.eq-cider-player .eq-cider-lyric-toggle[aria-pressed="true"] { color:#ffc400;background:rgba(255,196,0,.13); }
+.eq-cider-player .eq-cider-lyric-toggle[aria-pressed="false"] { color:rgba(255,255,255,.45);background:rgba(255,255,255,.04); }
+section.eq-cider-player[data-cider-version] .eq-cider-lyrics-expander[data-expanded="true"] { height:var(--eq-cider-lyrics-height,184px) !important; }
+section.eq-cider-player[data-cider-version] .eq-cider-lyrics { height:var(--eq-cider-lyrics-height,184px) !important;margin-top:0 !important; }
+section.eq-cider-player[data-cider-version] .eq-cider-lyrics .eq-cider-lyric-line[data-slot] { transform:translate3d(0,calc(-50% + var(--eq-cider-line-y,0px)),0) scale(.72) !important; }
+section.eq-cider-player[data-cider-version] .eq-cider-lyrics .eq-cider-lyric-line[data-current="true"] { transform:translate3d(0,-50%,0) scale(1) !important; }
+section.eq-cider-player[data-cider-version] .eq-cider-lyric-original { overflow-wrap:anywhere;white-space:normal; }
+section.eq-cider-player[data-cider-version] :is(.eq-cider-lyric-translation,.eq-cider-lyric-romanization) { white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; }
+
+section.eq-cider-player[data-cider-version] .eq-cider-lyric-translation { font-size:12.5px !important;line-height:16px !important; }
+section.eq-cider-player[data-cider-version] .eq-cider-lyric-romanization { font-size:11.5px !important;line-height:15px !important; }
+.eq-cider-host:has(.eq-cider-player .eq-cider-artwork:disabled) { display:none !important; }
+body > .eq-cider-sampling { top:anchor(--equibop-cider-glass top,0px);left:anchor(--equibop-cider-glass left,0px);width:anchor-size(--equibop-cider-glass width,0px);height:anchor-size(--equibop-cider-glass height,0px); }
