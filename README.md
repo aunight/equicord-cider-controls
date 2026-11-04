@@ -4,6 +4,15 @@
 
 A Windows desktop user plugin for **Equicord / Equibop** that puts Cider controls above your user panel, including when a voice panel is visible. Version **1.5.0** uses English UI labels by default.
 
+
+## Screenshots
+
+Component previews using demo playback data. The English version currently displays Chinese translations when available.
+
+![English player and lyrics](docs/screenshots/player-en.jpg)
+
+![English equalizer](docs/screenshots/eq-en.jpg)
+
 ## Features
 
 - Previous / play-pause / next, seek and volume, rounded artwork, long-title marquee.
