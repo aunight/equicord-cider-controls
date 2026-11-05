@@ -122,6 +122,7 @@ function Player() {
     }
 
     async function changeMode(mode: string) {
+        ContextMenuApi.closeContextMenu();
         setBusy(true);
         try {
             const result = await Native.listeningMode(mode);
