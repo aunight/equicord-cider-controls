@@ -2,7 +2,7 @@
 
 [繁體中文](README.zh-TW.md)
 
-A Windows desktop user plugin for **Equicord / Equibop** that puts Cider controls above your user panel, including when a voice panel is visible. Version **1.5.1** uses English UI labels by default.
+A Windows desktop user plugin for **Equicord / Equibop** that puts Cider controls above your user panel, including when a voice panel is visible. Version **1.5.2** uses English UI labels by default.
 
 
 ## Screenshots

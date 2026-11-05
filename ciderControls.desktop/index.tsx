@@ -140,7 +140,7 @@ function Player() {
     const playing = Boolean(playback?.playing);
     const title = playback?.title || "Cider";
     return (
-        <section className="eq-cider-player" data-cider-version="1.5.1" aria-label="Cider music controls" aria-busy={busy}>
+        <section className="eq-cider-player" data-cider-version="1.5.2" aria-label="Cider music controls" aria-busy={busy}>
             <div className="eq-cider-row">
                 <Button variant="none" className="eq-cider-artwork" aria-label={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} title={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} aria-expanded={lyricsExpanded} disabled={!ready} onClick={() => { settings.store.lyricsExpanded = !lyricsExpanded; }}>
                     {playback?.artwork && failedArtwork !== playback.artwork
