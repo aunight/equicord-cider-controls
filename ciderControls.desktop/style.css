@@ -253,3 +253,8 @@ section.eq-cider-player[data-cider-version] .eq-cider-lyric-translation { font-s
 section.eq-cider-player[data-cider-version] .eq-cider-lyric-romanization { font-size:11.5px !important;line-height:15px !important; }
 .eq-cider-host:has(.eq-cider-player .eq-cider-artwork:disabled) { display:none !important; }
 body > .eq-cider-sampling { top:anchor(--equibop-cider-glass top,0px);left:anchor(--equibop-cider-glass left,0px);width:anchor-size(--equibop-cider-glass width,0px);height:anchor-size(--equibop-cider-glass height,0px); }
+
+.eq-cider-volume-group { display: flex; align-items: center; gap: 6px; flex: 0 1 76px; min-width: 0; transition: flex-basis 160ms ease; }
+.eq-cider-volume-group[data-adjusting="true"] { flex-basis: 110px; }
+.eq-cider-sliders .eq-cider-volume-group input.eq-cider-volume { flex: 1 1 auto; min-width: 0; width: 100%; }
+@media (prefers-reduced-motion: reduce) { .eq-cider-volume-group { transition: none; } }

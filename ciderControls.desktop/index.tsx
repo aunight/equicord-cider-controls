@@ -67,15 +67,87 @@ function time(value: number) {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+function VolumeSlider({ value, label, onError }: { value: number; label: string; onError: (message: string) => void; }) {
+    const group = useRef<HTMLLabelElement>(null);
+    const slider = useRef<HTMLInputElement>(null);
+    const [preview, setPreview] = useState<number | null>(null);
+    const pending = useRef<number | null>(null);
+    const sending = useRef(false);
+    const dragging = useRef(false);
+    const mounted = useRef(false);
+    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const level = preview ?? value;
+
+    function collapseLater() {
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+            if (!dragging.current && !sending.current) setPreview(null);
+        }, 1800);
+    }
+
+    async function adjust(next: number) {
+        setPreview(next);
+        pending.current = next;
+        if (sending.current) return;
+        sending.current = true;
+        try {
+            while (mounted.current && pending.current !== null) {
+                const target = pending.current;
+                pending.current = null;
+                const result = await Native.control("volume", target);
+                if (mounted.current && !result.ok) onError(result.message);
+            }
+        } catch (error) {
+            if (mounted.current) onError(String(error));
+        } finally {
+            sending.current = false;
+            if (mounted.current) collapseLater();
+        }
+    }
+
+    useEffect(() => {
+        mounted.current = true;
+        const element = group.current;
+        function wheel(event: WheelEvent) {
+            if (!slider.current || !event.deltaY || event.ctrlKey) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const next = Math.max(0, Math.min(100, Math.round(slider.current.valueAsNumber * 100) - Math.sign(event.deltaY) * 5)) / 100;
+            slider.current.value = String(next);
+            void adjust(next);
+        }
+        element?.addEventListener("wheel", wheel, { passive: false });
+        return () => {
+            mounted.current = false;
+            clearTimeout(timer.current);
+            element?.removeEventListener("wheel", wheel);
+        };
+    }, []);
+
+    function endDrag() {
+        dragging.current = false;
+        collapseLater();
+    }
+
+    return <label ref={group} className="eq-cider-volume-group" data-adjusting={preview !== null}>
+        <Icon name="volume" />
+        <input ref={slider} className="eq-cider-volume" aria-label={label} type="range" min="0" max="1" step="0.01" value={level}
+            style={{ "--eq-cider-progress": `${level * 100}%` } as CSSProperties}
+            onPointerDown={event => { dragging.current = true; setPreview(level); event.currentTarget.setPointerCapture(event.pointerId); }}
+            onLostPointerCapture={endDrag} onChange={event => void adjust(event.currentTarget.valueAsNumber)} />
+    </label>;
+}
+
 function Player() {
     const { showOffline, lyricsExpanded, showTranslation, showRomanization } = settings.use(settingKeys);
     const [playback, setPlayback] = useState<Playback | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [seek, setSeek] = useState<number | null>(null);
-    const [volume, setVolume] = useState<number | null>(null);
     const [failedArtwork, setFailedArtwork] = useState("");
     const refresh = useRef<() => Promise<void>>(async () => {});
+    const playbackRevision = useRef(0);
+    const expectedPlayback = useRef<{ playing: boolean; until: number; } | null>(null);
     const commandPending = useRef(false);
     const alive = useRef(false);
 
@@ -87,8 +159,16 @@ function Player() {
             if (reading || !alive.current) return;
             reading = true;
             try {
+                const revision = playbackRevision.current;
                 const state = await Native.status();
-                if (alive.current) setPlayback(state);
+                if (!alive.current || revision !== playbackRevision.current) return;
+                const expected = expectedPlayback.current;
+                if (state.connected && expected && expected.playing !== state.playing && Date.now() < expected.until) {
+                    setPlayback({ ...state, playing: expected.playing });
+                } else {
+                    expectedPlayback.current = null;
+                    setPlayback(state);
+                }
             } catch {
                 if (alive.current) setError("Cider connection temporarily interrupted.");
             } finally {
@@ -107,17 +187,31 @@ function Player() {
     async function control(action: Action, value?: number) {
         if (commandPending.current) return;
         commandPending.current = true;
+        const toggling = action === "playpause" && playback !== null;
+        if (toggling) {
+            playbackRevision.current++;
+            expectedPlayback.current = { playing: !playback.playing, until: Date.now() + 3000 };
+            setPlayback({ ...playback, playing: !playback.playing });
+        }
+        const rollback = () => {
+            if (!toggling) return;
+            playbackRevision.current++;
+            expectedPlayback.current = null;
+            if (alive.current) setPlayback(current => current && ({ ...current, playing: playback.playing }));
+        };
         setBusy(true);
         setError("");
         try {
             const result = await Native.control(action, value);
+            if (!result.ok) rollback();
             if (alive.current && !result.ok) setError(result.message);
             await refresh.current();
         } catch {
+            rollback();
             if (alive.current) setError("Could not connect to Cider.");
         } finally {
             commandPending.current = false;
-            if (alive.current) { setBusy(false); setSeek(null); setVolume(null); }
+            if (alive.current) { setBusy(false); setSeek(null); }
         }
     }
 
@@ -136,11 +230,10 @@ function Player() {
     const ready = Boolean(playback?.connected);
     const duration = playback?.duration ?? 0;
     const position = Math.min(duration, seek ?? playback?.position ?? 0);
-    const level = volume ?? playback?.volume ?? 0.5;
     const playing = Boolean(playback?.playing);
     const title = playback?.title || "Cider";
     return (
-        <section className="eq-cider-player" data-cider-version="1.5.2" aria-label="Cider music controls" aria-busy={busy}>
+        <section className="eq-cider-player" data-cider-version="1.5.3" aria-label="Cider music controls" aria-busy={busy}>
             <div className="eq-cider-row">
                 <Button variant="none" className="eq-cider-artwork" aria-label={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} title={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} aria-expanded={lyricsExpanded} disabled={!ready} onClick={() => { settings.store.lyricsExpanded = !lyricsExpanded; }}>
                     {playback?.artwork && failedArtwork !== playback.artwork
@@ -162,8 +255,7 @@ function Player() {
                 <span className="eq-cider-time">{time(position)}</span>
                 <input aria-label="Playback position" type="range" min="0" max={duration || 1} step="1" value={position} style={{ "--eq-cider-progress": `${duration ? position / duration * 100 : 0}%` } as CSSProperties} disabled={busy || !duration} onChange={e => setSeek(Number(e.currentTarget.value))} onPointerUp={e => void control("seek", Number(e.currentTarget.value))} onPointerCancel={() => setSeek(null)} onKeyUp={e => { if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) void control("seek", Number(e.currentTarget.value)); }} />
                 <span className="eq-cider-time">{time(duration)}</span>
-                <Icon name="volume" />
-                <input className="eq-cider-volume" aria-label="Cider volume" type="range" min="0" max="1" step="0.01" value={level} style={{ "--eq-cider-progress": `${level * 100}%` } as CSSProperties} disabled={busy} onChange={e => setVolume(Number(e.currentTarget.value))} onPointerUp={e => void control("volume", Number(e.currentTarget.value))} onPointerCancel={() => setVolume(null)} onKeyUp={e => { if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) void control("volume", Number(e.currentTarget.value)); }} />
+                <VolumeSlider value={playback?.volume ?? 0.5} label="Cider volume" onError={setError} />
             </div>}
             {ready && <div className="eq-cider-options">
                 <Button variant="none" size="iconOnly" className="eq-cider-option eq-cider-eq-button" aria-label="Open Cider Equalizer" title="Equalizer" onClick={openEqualizer}><Icon name="eq" /></Button>
