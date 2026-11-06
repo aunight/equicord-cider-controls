@@ -141,6 +141,8 @@ function VolumeSlider({ value, label, onError }: { value: number; label: string;
 function Player() {
     const { showOffline, lyricsExpanded, showTranslation, showRomanization } = settings.use(settingKeys);
     const [playback, setPlayback] = useState<Playback | null>(null);
+    const [favoriteOverride, setFavoriteOverride] = useState<{ id: string; value: boolean; } | null>(null);
+    const favoritePending = useRef(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [seek, setSeek] = useState<number | null>(null);
@@ -215,6 +217,25 @@ function Player() {
         }
     }
 
+    async function toggleFavorite() {
+        if (!playback || favoritePending.current || playback.favorite === null) return;
+        favoritePending.current = true;
+        const id = playback.trackId;
+        const value = !playback.favorite;
+        setFavoriteOverride({ id, value });
+        try {
+            const result = await Native.favorite(id, value);
+            if (alive.current && !result.ok) setError(result.message);
+            await refresh.current();
+            if (alive.current && result.ok) setPlayback(current => current?.trackId === id ? { ...current, favorite: value } : current);
+        } catch (error) {
+            if (alive.current) setError(String(error));
+        } finally {
+            favoritePending.current = false;
+            if (alive.current) setFavoriteOverride(null);
+        }
+    }
+
     async function changeMode(mode: string) {
         ContextMenuApi.closeContextMenu();
         setBusy(true);
@@ -233,7 +254,7 @@ function Player() {
     const playing = Boolean(playback?.playing);
     const title = playback?.title || "Cider";
     return (
-        <section className="eq-cider-player" data-cider-version="1.5.3" aria-label="Cider music controls" aria-busy={busy}>
+        <section className="eq-cider-player" data-cider-version="1.5.4" aria-label="Cider music controls" aria-busy={busy}>
             <div className="eq-cider-row">
                 <Button variant="none" className="eq-cider-artwork" aria-label={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} title={lyricsExpanded ? "Collapse lyrics" : "Expand lyrics"} aria-expanded={lyricsExpanded} disabled={!ready} onClick={() => { settings.store.lyricsExpanded = !lyricsExpanded; }}>
                     {playback?.artwork && failedArtwork !== playback.artwork
@@ -246,6 +267,7 @@ function Player() {
                     <div className="eq-cider-artist" title={playback?.artist}>{ready ? playback?.artist || "No track playing" : "Waiting for Cider"}</div>
                 </div>
                 <div className="eq-cider-transport">
+                    <Button variant="none" size="iconOnly" className="eq-cider-button eq-cider-favorite" aria-label="Favorite" title="Favorite" aria-pressed={favoriteOverride?.id === playback?.trackId ? favoriteOverride?.value : playback?.favorite === true} disabled={!ready || playback?.favorite == null} onClick={() => void toggleFavorite()}><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2L12 17.3l-5.7 2.9 1.1-6.2-4.5-4.4 6.3-.9Z" fill="currentColor" /></svg></Button>
                     <Button variant="none" size="iconOnly" className="eq-cider-button" aria-label="Previous track" title="Previous track" disabled={!ready || busy} onClick={() => void control("previous")}><Icon name="previous" /></Button>
                     <Button variant="none" size="iconOnly" className="eq-cider-button eq-cider-play" aria-label={playing ? "Pause" : "Play"} title={playing ? "Pause" : "Play"} disabled={!ready || busy} onClick={() => void control("playpause")}><Icon name={playing ? "pause" : "play"} /></Button>
                     <Button variant="none" size="iconOnly" className="eq-cider-button" aria-label="Next track" title="Next track" disabled={!ready || busy} onClick={() => void control("next")}><Icon name="next" /></Button>

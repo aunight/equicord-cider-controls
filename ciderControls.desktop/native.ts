@@ -24,6 +24,7 @@ export type Playback = {
     trackId: string;
     sampledAt: number;
     mode: string;
+    favorite: boolean | null;
 };
 
 export type Action = "playpause" | "previous" | "next" | "seek" | "volume";
@@ -67,7 +68,7 @@ async function request(path: string, body?: Record<string, unknown>, method = bo
     const key = await getToken();
     const response = await fetch(`http://127.0.0.1:10767/api/${path}`, {
         method,
-        headers: { apptoken: key, "Content-Type": "application/json" },
+        headers: body ? { apptoken: key, "Content-Type": "application/json" } : { apptoken: key },
         body: body ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(timeout),
         redirect: "error"
@@ -84,11 +85,12 @@ async function request(path: string, body?: Record<string, unknown>, method = bo
 
 export async function status(_event: unknown): Promise<Playback> {
     try {
-        const [now, state, volume, mode] = await Promise.all([
+        const [now, state, volume, mode, library] = await Promise.all([
             request("v1/playback/now-playing"),
             request("v2/playback/state"),
             request("v1/playback/volume"),
-            request("v2/audio/listening-mode").catch(() => null)
+            request("v2/audio/listening-mode").catch(() => null),
+            request("v2/library/now-playing/status").catch(() => null)
         ]);
         const info = record(record(now).info);
         const artwork = text(record(info.artwork).url).replace(/\{w\}|\{h\}/g, "128");
@@ -105,14 +107,15 @@ export async function status(_event: unknown): Promise<Playback> {
             volume: Math.min(1, Math.max(0, number(record(volume).volume, 0.5))),
             trackId: text(record(info.playParams).catalogId) || text(record(info.playParams).id) || text(info.name),
             sampledAt: Date.now(),
-            mode: text(record(record(mode).data).mode)
+            mode: text(record(record(mode).data).mode),
+            favorite: typeof info.inFavorites === "boolean" ? info.inFavorites : library === null ? null : number(record(record(library).data).rating) === 1
         };
     } catch (error) {
         return {
             connected: false,
             message: error instanceof Error && error.message.startsWith("Create an Equicord") ? error.message : "Open Cider to connect automatically.",
             title: "", artist: "", artwork: "", playing: false, duration: 0, position: 0, volume: 0.5,
-            trackId: "", sampledAt: Date.now(), mode: ""
+            trackId: "", sampledAt: Date.now(), mode: "", favorite: null
         };
     }
 }
@@ -222,5 +225,19 @@ export async function control(_event: unknown, action: Action, value?: number): 
         return { ok: true, message: "" };
     } catch (error) {
         return { ok: false, message: error instanceof Error && error.message.startsWith("Create an Equicord") ? error.message : "Could not control Cider. Make sure it is running." };
+    }
+}
+
+
+export async function favorite(_event: unknown, trackId: string, enabled: boolean): Promise<{ ok: boolean; message: string; }> {
+    try {
+        const now = record(record(await request("v1/playback/now-playing")).info);
+        const currentId = text(record(now.playParams).catalogId) || text(record(now.playParams).id) || text(now.name);
+        if (!trackId || currentId !== trackId) throw new Error("Track changed. Try again.");
+        if (enabled) await request("v2/library/now-playing/love", {}, "POST");
+        else await request("v2/library/now-playing/rating", undefined, "DELETE");
+        return { ok: true, message: "" };
+    } catch (error) {
+        return { ok: false, message: error instanceof Error ? error.message : "Unable to update favorites." };
     }
 }

@@ -258,3 +258,23 @@ body > .eq-cider-sampling { top:anchor(--equibop-cider-glass top,0px);left:ancho
 .eq-cider-volume-group[data-adjusting="true"] { flex-basis: 110px; }
 .eq-cider-sliders .eq-cider-volume-group input.eq-cider-volume { flex: 1 1 auto; min-width: 0; width: 100%; }
 @media (prefers-reduced-motion: reduce) { .eq-cider-volume-group { transition: none; } }
+
+.eq-cider-favorite { color: rgba(255,255,255,.55); }
+.eq-cider-favorite[aria-pressed="true"] { color: #ffc400; }
+
+/* Cider favorite state: hollow until favorited. */
+.eq-cider-favorite svg path {
+    fill: none !important;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+}
+.eq-cider-favorite[aria-pressed="true"] svg path {
+    fill: currentColor !important;
+}
+.eq-cider-favorite[aria-pressed="false"] {
+    color: rgba(255,255,255,.65) !important;
+}
+.eq-cider-favorite[aria-pressed="true"] {
+    color: #ffc400 !important;
+}
